@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>TO BE SAFE - Jigsaw Puzzle</title>
+
+<style>
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    padding: 30px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background: linear-gradient(135deg, #e0f7fa, #ffffff);
+    color: #17324d;
+}
+
+h1 {
+    font-size: 38px;
+    margin-bottom: 5px;
+}
+
+p {
+    font-size: 18px;
+}
+
+/* Puzzle board */
+
+#board {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+
+    gap: 8px;
+
+    max-width: 850px;
+
+    margin: 30px auto;
+
+    padding: 25px;
+
+    border: 4px dashed #78909c;
+    border-radius: 15px;
+
+    background: #f5f5f5;
+}
+
+/* Puzzle spaces */
+
+.slot {
+    width: 70px;
+    height: 80px;
+
+    border: 3px dashed #90a4ae;
+
+    border-radius: 12px;
+
+    background: white;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+/* TWO SPACES BETWEEN WORDS */
+
+.word-space {
+    width: 45px;
+    height: 80px;
+}
+
+/* Pieces */
+
+#pieces {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+
+    gap: 10px;
+
+    max-width: 700px;
+
+    margin: 25px auto;
+}
+
+.piece {
+    width: 70px;
+    height: 80px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    background: #2196f3;
+
+    color: white;
+
+    font-size: 34px;
+
+    font-weight: bold;
+
+    border-radius: 12px;
+
+    cursor: grab;
+
+    user-select: none;
+
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+
+    transition: transform 0.15s;
+}
+
+.piece:hover {
+    transform: scale(1.07);
+}
+
+.correct {
+    background: #4caf50;
+    cursor: default;
+}
+
+/* Message */
+
+#message {
+    min-height: 45px;
+
+    margin: 15px;
+
+    font-size: 24px;
+
+    font-weight: bold;
+
+    color: #16803c;
+}
+
+/* Button */
+
+button {
+    padding: 12px 25px;
+
+    border: none;
+
+    border-radius: 8px;
+
+    background: #17324d;
+
+    color: white;
+
+    font-size: 16px;
+
+    cursor: pointer;
+}
+
+button:hover {
+    background: #285a80;
+}
+
+</style>
+</head>
+
+<body>
+
+<h1>🧩 TO BE SAFE</h1>
+
+<p>
+    Drag the letters into the correct order.
+</p>
+
+<div id="board"></div>
+
+<div id="pieces"></div>
+
+<div id="message"></div>
+
+<button onclick="resetPuzzle()">🔄 Reset Puzzle</button>
+
+
+<script>
+
+const answer = "TOBESAFE";
+
+const scrambled = [
+    "S",
+    "E",
+    "T",
+    "A",
+    "O",
+    "F",
+    "B",
+    "E"
+];
+
+const board = document.getElementById("board");
+
+const piecesContainer =
+    document.getElementById("pieces");
+
+const message =
+    document.getElementById("message");
+
+let draggedPiece = null;
+
+
+/* Create puzzle board */
+
+function createBoard() {
+
+    board.innerHTML = "";
+
+    for (let i = 0; i < answer.length; i++) {
+
+        /* Add TWO-SPACE visual gap */
+
+        if (i === 2 || i === 4) {
+
+            const space = document.createElement("div");
+
+            space.className = "word-space";
+
+            board.appendChild(space);
+        }
+
+        const slot =
+            document.createElement("div");
+
+        slot.className = "slot";
+
+        slot.dataset.position = i;
+
+
+        slot.addEventListener(
+            "dragover",
+            function(event) {
+
+                event.preventDefault();
+
+            }
+        );
+
+
+        slot.addEventListener(
+            "drop",
+            function() {
+
+                if (!draggedPiece) return;
+
+                const correctLetter =
+                    answer[this.dataset.position];
+
+                const selectedLetter =
+                    draggedPiece.dataset.letter;
+
+
+                if (correctLetter === selectedLetter) {
+
+                    this.appendChild(draggedPiece);
+
+                    draggedPiece.classList.add(
+                        "correct"
+                    );
+
+                    draggedPiece.draggable = false;
+
+                    draggedPiece = null;
+
+                    checkComplete();
+
+                } else {
+
+                    message.textContent =
+                        "❌ Try another position!";
+
+                    setTimeout(function() {
+
+                        message.textContent = "";
+
+                    }, 1200);
+                }
+
+            }
+        );
+
+
+        board.appendChild(slot);
+    }
+}
+
+
+/* Create scrambled pieces */
+
+function createPieces() {
+
+    piecesContainer.innerHTML = "";
+
+    scrambled.forEach(function(letter) {
+
+        const piece =
+            document.createElement("div");
+
+        piece.className = "piece";
+
+        piece.textContent = letter;
+
+        piece.dataset.letter = letter;
+
+        piece.draggable = true;
+
+
+        piece.addEventListener(
+            "dragstart",
+            function() {
+
+                draggedPiece = this;
+
+            }
+        );
+
+
+        piecesContainer.appendChild(piece);
+
+    });
+}
+
+
+/* Check completion */
+
+function checkComplete() {
+
+    const slots =
+        document.querySelectorAll(".slot");
+
+    const complete =
+        Array.from(slots).every(function(slot) {
+
+            return slot.children.length === 1;
+
+        });
+
+
+    if (complete) {
+
+        message.textContent =
+            "🎉 Great job! TO BE SAFE!";
+
+    }
+}
+
+
+/* Reset */
+
+function resetPuzzle() {
+
+    message.textContent = "";
+
+    draggedPiece = null;
+
+    createBoard();
+
+    createPieces();
+
+}
+
+
+/* Start */
+
+createBoard();
+
+createPieces();
+
+</script>
+
+</body>
+</html>
